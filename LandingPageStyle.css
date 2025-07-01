@@ -1,0 +1,41 @@
+body{
+    background-color:bisque;
+    justify-items: center;
+    /* background-image: url("images/Background\ image.jpg"); */
+    
+
+}
+
+*{
+    padding: 0px;
+    margin: 0px;
+}
+
+.container{
+    background-color: white;
+    width: 100vw;
+    height: 100vh;
+    background-image: url("images/Background\ image.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+
+}
+
+
+.navbar{
+    height: 20vh;
+    width: 100%;
+}
+
+.mainArea{
+    height: 65vh;
+    width: 100%;
+    background-color: pink;
+    justify-content: center;
+    justify-items: center;
+}
+.startArea{
+    background-color: antiquewhite;
+    width: fit-content;
+}
