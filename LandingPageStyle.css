@@ -2,7 +2,6 @@ body{
     background-color:bisque;
     justify-items: center;
     /* background-image: url("images/Background\ image.jpg"); */
-    
 
 }
 
@@ -19,6 +18,7 @@ body{
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
+    overflow: hidden;
 
 }
 
@@ -26,16 +26,109 @@ body{
 .navbar{
     height: 20vh;
     width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
 }
+.rightButtons{
+    /* align-content: stretch; */
+    justify-items:end ;
+    width: 100%;
+    /* display: flex; */
+    /* flex-direction: column; */
+}
+.socials{
+    width: 80px;
+    transform: skewX(15deg) translateX(65%);
+    margin-top: 10px ;
+    padding: 0.4em 4em;
+}
+
+.socials span{
+    display: inline-block;
+    transform: skewX(-15deg);
+}
+
+
 
 .mainArea{
     height: 65vh;
     width: 100%;
-    background-color: pink;
+    /* background-color: pink; */
     justify-content: center;
     justify-items: center;
 }
 .startArea{
-    background-color: antiquewhite;
-    width: fit-content;
+    /* background-color: antiquewhite; */
+    width: min(100vw,620px);
+    height: 100%;
+    align-content: center;
+    justify-items: center;
+}
+
+.startContainer{
+    height: 60%;
+    width: 80%;
+    border-radius: 20px;
+    position: relative;
+    z-index: 2;
+    /* background: inherit; */
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.startContainer::before{
+    content: "";
+    background: inherit;
+    /* background: rgba(67, 154, 211, 0.2); */
+    border-radius: 20px;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: 0;
+    filter: blur(20px);
+}
+
+.headingArea{
+    height: 25%;
+    justify-items: center;
+    align-content: center;
+    position: relative;
+    padding-inline: 100px ;
+}
+.paragraphArea{
+    height: 25%;
+    text-align: center;
+    align-content: center;
+    position: relative;
+}
+
+.playButtonArea{
+    height: 50%;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+}
+
+.playButton{
+    border: 1px solid rgb(19, 77, 54);
+    transform: skewX(-15deg);
+    border-radius: 7px;
+    /* background-color:linear-gradient(to right, white,black); */
+    background: linear-gradient(to right,#8db,rgb(52, 151, 111));
+}
+
+.playButton span {
+    /* border-radius: 10px; */
+    display: inline-block;
+    padding: 0.3em 2em;
+    white-space: nowrap;
+    transform: skewX(15deg);
+    font-size: 2em;
+}
+
+.mainTitle{
+    font-size: 2.5em;
+}
+
+.paragraph{
+    padding-inline: 20px;
 }
