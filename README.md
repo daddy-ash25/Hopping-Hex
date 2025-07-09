@@ -1,2 +1,2 @@
-# Hopping-Hex
-Hopping Hex is an endless running browser game, survive the cruel streams for as long as possible
+#The Lost Bubble
+The Lost Bubble is endless game, swim through the deadly crevices while doudging the dangers under the deep sea
