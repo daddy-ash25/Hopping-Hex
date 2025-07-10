@@ -76,6 +76,7 @@ const waveGenerator = {
 
 
         function shifter( wave, prevWave, acc, count, isLeft){
+            //if its the first no, just initialising then
             if(count == 0){
                 if(isLeft)
                     mapData.prevousXLeft = wave;
@@ -83,6 +84,8 @@ const waveGenerator = {
                     mapData.prevousXRight = wave;
                 return wave;
             }
+
+            //spacing out between two points so the terrain dosent look borring
             else{
                 const diff = prevWave - wave;
                 const sign = diff === 0 ? 1 : diff / Math.abs(diff);
@@ -110,6 +113,7 @@ const waveGenerator = {
             }
         }
 
+
         //function to normalise and rescale the data
         function waveNormaliseAndRescale(baseWave, high, low) {
             //normalisation from 0 to 1
@@ -117,14 +121,10 @@ const waveGenerator = {
 
             //normalised*max to range
             baseWave = baseWave * parameters.maxHeight;
-            // console.log(baseWave);
 
             // squishing exiding data
             if (baseWave > high) {
-                // const maxX = parameters.maxHeight((parameters.maxHeight-parameters.stretchToMin)/(parameters.stretchToMax-parameters.stretchToMin));
-                // const scale = parameters.maxHeight - parameters.minHeight;
                 baseWave = parameters.stretchToMax + (parameters.scale * (Math.log(1 + (baseWave - parameters.stretchToMax)) / Math.log(1 + (parameters.maxX - parameters.stretchToMax))));
-                // baseWave = parameters.minHeight + (parameters.scale * (Math.log(1 + (baseWave - parameters.minHeight)) / Math.log(1 + (parameters.maxX - parameters.minHeight))));
             }
 
             // return Math.max(0,baseWave);
@@ -165,7 +165,6 @@ const waveGenerator = {
 
 }
 
-console.log(canvas);
 let c = canvas.getContext('2d');
 let gameStarted = false;
 
@@ -182,10 +181,6 @@ if (!gameStarted) {
             waveGenerator.waveDataGenerator(noiseA, parameters.Octave1InputScale, parameters.Octave2InputScale, mapData.dataNo, true);
             waveGenerator.waveDataGenerator(noiseB, parameters.Octave1InputScale, parameters.Octave2InputScale, mapData.dataNo, false);
         }
-        console.log(mapData.leftCrevis);
-        console.log(mapData.rigthCrevis);
-        console.log(mapData.dataNo);
-
 
         //initial data seeding of the empty terrainCoordinates
         waveGenerator.terrainDataGenerator(mapData.leftCrevis[terrainData.DataNo], mapData.leftCrevis[terrainData.DataNo], 0, terrainData.DataNo, true);
@@ -195,9 +190,23 @@ if (!gameStarted) {
             waveGenerator.terrainDataGenerator(mapData.leftCrevis[terrainData.DataNo-1], mapData.leftCrevis[terrainData.DataNo], terrainData.terrainCoordinatesLeft[terrainData.terrainCoordinatesLeft.length-1].y, terrainData.DataNo, true);
             waveGenerator.terrainDataGenerator(mapData.rightCrevis[terrainData.DataNo-1], mapData.rightCrevis[terrainData.DataNo], terrainData.terrainCoordinatesRight[terrainData.terrainCoordinatesRight.length-1].y, terrainData.DataNo, false);
         }
-        console.log(terrainData.terrainCoordinatesLeft);
-        console.log(terrainData.terrainCoordinatesRight);
     }
 }
 
 
+for(let i = 0; i<5;i++){
+    pointAdder();
+}
+
+//adds new point on the call
+function pointAdder(){
+    //getting new point
+    waveGenerator.waveDataGenerator(noiseA, parameters.Octave1InputScale, parameters.Octave2InputScale, mapData.dataNo, true);
+    waveGenerator.waveDataGenerator(noiseB, parameters.Octave1InputScale, parameters.Octave2InputScale, mapData.dataNo, false);
+    mapData.dataNo++
+
+    //generating points to get data
+    waveGenerator.terrainDataGenerator(mapData.leftCrevis[terrainData.DataNo-1], mapData.leftCrevis[terrainData.DataNo], terrainData.terrainCoordinatesLeft[terrainData.terrainCoordinatesLeft.length-1].y, terrainData.DataNo, true);
+    waveGenerator.terrainDataGenerator(mapData.rightCrevis[terrainData.DataNo-1], mapData.rightCrevis[terrainData.DataNo], terrainData.terrainCoordinatesRight[terrainData.terrainCoordinatesRight.length-1].y, terrainData.DataNo, false);
+    terrainData.DataNo++
+}
