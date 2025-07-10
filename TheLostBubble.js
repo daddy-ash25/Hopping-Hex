@@ -34,7 +34,13 @@ let mapData = {
     rightCrevis: [],
     dataNo: 0,
     curveFactorDataNo: 0,
-    Octaves: 2
+    Octaves: 2,
+
+    prevousXLeft: 0,
+    prevousXRight: 0,
+    accumulatorLeft:0,
+    accumulatorRight:0,
+    minStep: 5
 }
 
 let terrainData = {
@@ -54,19 +60,55 @@ const waveGenerator = {
         const n1 = (noise.perlin2(x * scale1, 0.5) * n1factor) + n1factor;
         const n2 = noise.perlin2(x * scale2, 0.5) * n2factor;
         const baseWave = n1 + n2;
-        // console.log(baseWave);
         let wave = waveNormaliseAndRescale(baseWave, parameters.stretchToMax, parameters.stretchToMin);
-        // console.log('scaled');
-        // console.log(wave);
         if (isLeft) {
-            mapData.leftCrevis.push(Math.floor(ExtendedWave(wave, parameters.ExWaveInputScale, x, isLeft)));
+            wave = ExtendedWave(wave, parameters.ExWaveInputScale, x, isLeft);
+            let wave1 = shifter(wave,mapData.prevousXLeft,mapData.accumulatorLeft, x, isLeft);
+            wave1 = Math.max(0, Math.min(100, wave1));
+            mapData.leftCrevis.push(Math.floor(wave1));
         }
         else {
             wave = ExtendedWave(wave, parameters.ExWaveInputScale, x, isLeft);
-            mapData.rightCrevis.push(Math.floor(100 - wave));
+            let wave1 = shifter(wave,mapData.prevousXRight,mapData.accumulatorRight,x, isLeft);
+            wave1 = Math.max(0, Math.min(100, wave1));
+            mapData.rightCrevis.push(Math.floor(100 - wave1));
         }
 
 
+        function shifter( wave, prevWave, acc, count, isLeft){
+            if(count == 0){
+                if(isLeft)
+                    mapData.prevousXLeft = wave;
+                else
+                    mapData.prevousXRight = wave;
+                return wave;
+            }
+            else{
+                const diff = prevWave - wave;
+                const sign = diff === 0 ? 1 : diff / Math.abs(diff);
+                if(Math.abs(diff) < mapData.minStep){
+                    const addableA = -(sign*(mapData.minStep - Math.abs(diff)));
+                    const addableB = (sign*(Math.abs(diff)+mapData.minStep));
+                    if(Math.abs(acc+addableA)<=Math.abs(acc+addableB)){
+                        acc += addableA;
+                        wave += addableA;
+                    }
+                    else{
+                        acc += addableB;
+                        wave += addableB;
+                    }
+                }
+                if(isLeft){
+                    mapData.accumulatorLeft = acc;
+                    mapData.prevousXLeft = wave;
+                }
+                else{
+                    mapData.accumulatorRight = acc;
+                    mapData.prevousXRight = wave;
+                }
+                return wave;
+            }
+        }
 
         //function to normalise and rescale the data
         function waveNormaliseAndRescale(baseWave, high, low) {
@@ -108,13 +150,12 @@ const waveGenerator = {
 
     //this generates the terrain coordinates
     terrainDataGenerator: function (x, newX, y, dataNo, isLeft) {
-        const newY = y + Math.abs(newX-x)*Math.sin(Math.PI/6);
+        const newY = y + Math.abs(newX-x)*Math.sin(Math.PI/6)*(9/16);
         const node1 = { x: newX, y: newY };
         const node2 = { x: newX, y: y+terrainData.yLength};
         if(isLeft){
             terrainData.terrainCoordinatesLeft.push(node1);
             terrainData.terrainCoordinatesLeft.push(node2);        
-     
         }
         else {
             terrainData.terrainCoordinatesRight.push(node1);       
