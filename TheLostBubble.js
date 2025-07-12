@@ -32,6 +32,7 @@ let parameters = {
 let mapData = {
     leftCrevis: [],
     rightCrevis: [],
+
     dataNo: 0,
     curveFactorDataNo: 0,
     Octaves: 2,
@@ -40,13 +41,19 @@ let mapData = {
     prevousXRight: 0,
     accumulatorLeft:0,
     accumulatorRight:0,
-    minStep: 5
+    minStep: 5,
+
+    //linningData
+    linningData: [],
+    minWidth:2.5
 }
 
 let terrainData = {
     terrainCoordinatesLeft: [],
     terrainCoordinatesRight: [],
     DataNo: 0,
+    IdNo:0,
+
     get yLength() {
         return 100 / parameters.Segments;
     }
@@ -149,17 +156,117 @@ const waveGenerator = {
     },
 
     //this generates the terrain coordinates
-    terrainDataGenerator: function (x, newX, y, dataNo, isLeft) {
+    terrainDataGenerator: function (x, newX, y, IdNo, isLeft) {
         const newY = y + Math.abs(newX-x)*Math.sin(Math.PI/6)*(9/16);
-        const node1 = { x: newX, y: newY };
-        const node2 = { x: newX, y: y+terrainData.yLength};
+        const node1 = { x: newX, y: newY, id: IdNo };
+        const node2 = { x: newX, y: y+terrainData.yLength, id: IdNo+1};
         if(isLeft){
+            
             terrainData.terrainCoordinatesLeft.push(node1);
             terrainData.terrainCoordinatesLeft.push(node2);        
         }
         else {
             terrainData.terrainCoordinatesRight.push(node1);       
             terrainData.terrainCoordinatesRight.push(node2);       
+        }
+    },
+
+    //this generates the linning coordinates
+    linningDataGenerator: function(number,isleft){
+        let P = [];
+        let point0;
+        let point1;
+        let point2;
+        let point3;
+        let point4;
+        if(isleft){
+            point0 = terrainData.terrainCoordinatesLeft[2*number-2];
+            point1 = terrainData.terrainCoordinatesLeft[2*number-1];
+            point2 = terrainData.terrainCoordinatesLeft[2*number];
+            point3 = terrainData.terrainCoordinatesLeft[2*number+1];
+            point4 = terrainData.terrainCoordinatesLeft[2*number+2];
+        }
+        else{
+            point0 = terrainData.terrainCoordinatesRight[2*number-2];
+            point1 = terrainData.terrainCoordinatesRight[2*number-1];
+            point2 = terrainData.terrainCoordinatesRight[2*number];
+            point3 = terrainData.terrainCoordinatesRight[2*number+1];
+            point4 = terrainData.terrainCoordinatesRight[2*number+2];
+        }
+        // console.log(number);
+        pFinder(point0,point1,point2,isleft);
+        pFinder(point1,point2,point3,isleft);
+        const linning1 = objMaker(P[0],point1,point2,P[1]);
+        mapData.linningData.push(linning1);
+        pFinder(point2,point3,point4,isleft);
+        const linning2 = objMaker(P[1],point2,point3,P[2]);
+        mapData.linningData.push(linning2);
+        // console.log(P);
+        mapData.linningData.push()
+        
+
+        function objMaker(p0,p1,p2,p3){
+            const obj = {
+                p0: {
+                    x: p0.x,
+                    y: p0.y,
+                    localID: 0
+                },
+                p1: {
+                    x: p1.x,
+                    y: p1.y,
+                    localID: 1
+                },
+                p2: {
+                    x: p2.x,
+                    y: p2.y,
+                    localID: 2
+                },
+                p3: {
+                    x: p3.x,
+                    y: p3.y,
+                    localID: 3
+                }
+            }
+            return obj;
+        }
+
+
+        function pFinder(pA,pC,pB,isLeft){
+            const p = getPerpendicularPoints(pA,pB,pC,(Math.random()+mapData.minWidth)/3)
+            if((p.p1.x<pC.x)){
+                if(isLeft){
+                    P.push(p.p1);
+                }
+                else
+                    P.push(p.p2);
+            }
+            else{
+                if(isLeft){
+                    P.push(p.p2);
+                }
+                else
+                    P.push(p.p1);            
+            }
+        }   
+
+        function getPerpendicularPoints(a, b, c, d) {
+            // console.log(a);
+            // console.log(c);
+            // console.log(b);            
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const len = Math.hypot(dx, dy);
+
+            const perp = {
+                x: -dy / len,
+                y: dx / len
+            };
+
+            const p1 = { x: c.x + perp.x * (d*16/9), y: c.y + perp.y * d };
+            const p2 = { x: c.x - perp.x * (d*16/9), y: c.y - perp.y * d };
+
+            return { p1, p2, perp };
         }
     }
 
@@ -168,8 +275,6 @@ const waveGenerator = {
 let c = canvas.getContext('2d');
 let gameStarted = false;
 
-c.fillRect(30, 20, 20, 20);
-// console.log(canvasContainer);
 
 if (!gameStarted) {
     StartingPageLoader()
@@ -177,26 +282,42 @@ if (!gameStarted) {
 
     function StartingPageLoader() {
         //seeding of the empty map data
-        for (mapData.dataNo = 0; mapData.dataNo < parameters.Segments; mapData.dataNo++) {
+        for (mapData.dataNo = 0; mapData.dataNo < parameters.Segments+3; mapData.dataNo++) {
             waveGenerator.waveDataGenerator(noiseA, parameters.Octave1InputScale, parameters.Octave2InputScale, mapData.dataNo, true);
             waveGenerator.waveDataGenerator(noiseB, parameters.Octave1InputScale, parameters.Octave2InputScale, mapData.dataNo, false);
+
         }
 
         //initial data seeding of the empty terrainCoordinates
         waveGenerator.terrainDataGenerator(mapData.leftCrevis[terrainData.DataNo], mapData.leftCrevis[terrainData.DataNo], 0, terrainData.DataNo, true);
         waveGenerator.terrainDataGenerator(mapData.rightCrevis[terrainData.DataNo], mapData.rightCrevis[terrainData.DataNo], 0, terrainData.DataNo, false);
+        // console.log(terrainData.terrainCoordinatesLeft);   
+        terrainData.IdNo += 2;
         terrainData.DataNo++;
-        for (terrainData.DataNo; terrainData.DataNo < parameters.Segments; terrainData.DataNo++) {
-            waveGenerator.terrainDataGenerator(mapData.leftCrevis[terrainData.DataNo-1], mapData.leftCrevis[terrainData.DataNo], terrainData.terrainCoordinatesLeft[terrainData.terrainCoordinatesLeft.length-1].y, terrainData.DataNo, true);
-            waveGenerator.terrainDataGenerator(mapData.rightCrevis[terrainData.DataNo-1], mapData.rightCrevis[terrainData.DataNo], terrainData.terrainCoordinatesRight[terrainData.terrainCoordinatesRight.length-1].y, terrainData.DataNo, false);
+        for (terrainData.DataNo; terrainData.DataNo < parameters.Segments+3; terrainData.DataNo++) {
+            waveGenerator.terrainDataGenerator(mapData.leftCrevis[terrainData.DataNo-1], mapData.leftCrevis[terrainData.DataNo], terrainData.terrainCoordinatesLeft[terrainData.terrainCoordinatesLeft.length-1].y, terrainData.IdNo, true);
+            waveGenerator.terrainDataGenerator(mapData.rightCrevis[terrainData.DataNo-1], mapData.rightCrevis[terrainData.DataNo], terrainData.terrainCoordinatesRight[terrainData.terrainCoordinatesRight.length-1].y, terrainData.IdNo, false);
+            if(terrainData.DataNo>1){
+                waveGenerator.linningDataGenerator(terrainData.DataNo-1,true);
+                waveGenerator.linningDataGenerator(terrainData.DataNo-1,false);
         }
+        terrainData.IdNo += 2;
+        }
+        console.log(terrainData.DataNo);
+        
+        
+        
     }
 }
 
 
 for(let i = 0; i<5;i++){
-    pointAdder();
+    // pointAdder();
 }
+        console.log(terrainData.terrainCoordinatesLeft);
+        console.log(terrainData.terrainCoordinatesRight);
+        console.log(mapData.linningData);
+        
 
 //adds new point on the call
 function pointAdder(){
@@ -206,7 +327,93 @@ function pointAdder(){
     mapData.dataNo++
 
     //generating points to get data
-    waveGenerator.terrainDataGenerator(mapData.leftCrevis[terrainData.DataNo-1], mapData.leftCrevis[terrainData.DataNo], terrainData.terrainCoordinatesLeft[terrainData.terrainCoordinatesLeft.length-1].y, terrainData.DataNo, true);
-    waveGenerator.terrainDataGenerator(mapData.rightCrevis[terrainData.DataNo-1], mapData.rightCrevis[terrainData.DataNo], terrainData.terrainCoordinatesRight[terrainData.terrainCoordinatesRight.length-1].y, terrainData.DataNo, false);
-    terrainData.DataNo++
+    waveGenerator.terrainDataGenerator(mapData.leftCrevis[terrainData.DataNo-1], mapData.leftCrevis[terrainData.DataNo], terrainData.terrainCoordinatesLeft[terrainData.terrainCoordinatesLeft.length-1].y, terrainData.IdNo, true);
+    waveGenerator.terrainDataGenerator(mapData.rightCrevis[terrainData.DataNo-1], mapData.rightCrevis[terrainData.DataNo], terrainData.terrainCoordinatesRight[terrainData.terrainCoordinatesRight.length-1].y, terrainData.IdNo, false);
+    terrainData.DataNo++;
+    terrainData.IdNo += 2;
+}
+
+terrainGenerator();
+
+function terrainGenerator(){
+    //Getting the height and width of the canvs
+    const W = canvas.width;
+    const H = canvas.height;
+
+    //getting the scale to plot the points
+    const scaleX = W / 100;
+    const scaleY = H / 100;
+    console.log(W);
+    console.log(H);
+    terrainMaker(terrainData.terrainCoordinatesLeft,"black",true);
+    terrainMaker(terrainData.terrainCoordinatesRight,"black",false);
+    linningMaker(mapData.linningData,true);
+
+
+    //generating the sides
+    function terrainMaker(data,color,isLeft){
+        c.strokeStyle = color;
+        c.fillStyle='#1d2f3f';
+        c.lineWidth = 1;
+        c.beginPath();
+        for(let i = 0; i<data.length;i++){
+            const p = data[i];
+            const x = p.x * scaleX;
+            const y = (100-p.y) * scaleY;
+            if(i==0)
+                c.moveTo(x, y);
+            else{
+                c.lineTo(x, y);
+            }
+        }
+        endingpoints(data,isLeft);
+        c.fill();
+        c.stroke();
+
+        function endingpoints(data,isLeft){
+            // const p = data[i];
+            if(isLeft){
+                c.lineTo(0,((100-data[data.length-1].y)*scaleY));
+                c.lineTo(0,(100-data[0].y)*scaleY);
+            }
+            else{
+                c.lineTo(100*scaleX,((100-data[data.length-1].y)*scaleY));
+                c.lineTo(100*scaleX,(100-data[0].y)*scaleY);
+            }
+        }
+    }
+
+    function linningMaker(data, isleft) {
+        for (let i = 0; i < data.length; i++) {
+            c.beginPath();
+            c.lineWidth = 1;
+            c.fillStyle = getRandomColor();
+            c.strokeStyle = 'black';
+
+            // You can optionally sort keys like p0, p1, p2, p3 to ensure order
+            const keys = Object.keys(data[i]).sort();
+
+            for (let k of keys) {
+                const point = data[i][k];
+                const x = point.x * scaleX;
+                const y = (100 - point.y) * scaleY;
+
+                if (point.localID == 0) {
+                    c.moveTo(x, y);
+                } else {
+                    c.lineTo(x, y);
+                }
+            }
+            c.fill();
+            // c.stroke();
+        }
+    }
+
+    function getRandomColor() {
+    const r = Math.floor(Math.random() * 256); // 0–255
+    const g = Math.floor(Math.random() * 256); // 0–255
+    const b = Math.floor(Math.random() * 256); // 0–255
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
 }
